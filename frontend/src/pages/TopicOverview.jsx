@@ -28,7 +28,7 @@ export default function TopicOverview() {
     <Box>
       <VStack align="start" gap={1} mb={6}>
         <Heading size="lg" bgGradient="to-r" gradientFrom="blue.600" gradientTo="green.500" bgClip="text">
-          Public Sentiment Overview
+          SingaRoar — Public Sentiment Overview
         </Heading>
         <Text color="gray.600">
           What are Singaporeans talking about? Analysis of {globalStats.totalPosts.toLocaleString()} Reddit posts from r/Singapore ({globalStats.dateRange}).

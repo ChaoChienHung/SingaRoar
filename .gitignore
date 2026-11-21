@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+.python-version
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node / Frontend
+node_modules/
+dist/
+
+# OS
+.DS_Store
+
+# Large intermediate artifacts
+*.npy
+*.npz

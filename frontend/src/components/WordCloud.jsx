@@ -1,5 +1,14 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
 
+function hashWord(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
 export default function WordCloud({ words, maxFontSize = 36, minFontSize = 12 }) {
   if (!words || words.length === 0) return null;
 
@@ -7,7 +16,7 @@ export default function WordCloud({ words, maxFontSize = 36, minFontSize = 12 })
   const minVal = Math.min(...words.map((w) => w.value));
   const range = maxVal - minVal || 1;
 
-  const shuffled = [...words].sort(() => Math.random() - 0.5);
+  const shuffled = [...words].sort((a, b) => hashWord(a.text) - hashWord(b.text));
 
   return (
     <Box p={4} bg="linear-gradient(135deg, #F8FBFF 0%, #F0FFF4 100%)" rounded="xl" borderWidth="1px" borderColor="blue.50">

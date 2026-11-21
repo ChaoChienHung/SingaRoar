@@ -1,119 +1,98 @@
 # SingaRoar
 
-## Introduction
+**SingaRoar** analyzes posts and comments from the Singapore subreddit (`r/singapore`) to surface public opinions, trending topics, emotion patterns, and searchable discussions. The name combines *Singa* (Malay for "lion," echoing Singapore, the Lion City) with *Roar*—capturing the collective voice, sentiment, and buzz of the local online community.
 
-**SingaRoar** analyzes posts and comments from the Singapore subreddit (`r/singapore`) to surface public opinions, trending topics, and sentiment patterns. The name combines *Singa* (Malay for "lion," echoing Singapore, the Lion City) with *Roar*—capturing the collective voice, sentiment, and buzz of the local online community. Raw social media text is processed through a structured multi-stage pipeline, from scraping and Singlish normalization to sentiment analysis, clustering, and document search.
-
-Note: Many files used during processing are not included in the repository as they are very large. Please forgive any file structure that is wrong in the jupyter notebooks. 
+Raw social media text flows through a multi-stage NLP and Information Retrieval pipeline—covering scraping, Singlish normalization, emotion inference, topic clustering, and document search—served through a modular Flask API and an interactive React dashboard.
 
 ## Project Structure
 
-```
+```text
 SingaRoar/
-├── dashboard-ui/          # Code for the dashboard UI
-├── data-scrape/          # Code for scraping Reddit Data
-├── sentiment_plots/          # Sentiment Distribution Scripts
-├── utilities/                # Helper scripts and dictionaries
-├── Stage_0_Introduction.ipynb
-├── Stage_1_Data_Collection_and_Data_Cleaning.ipynb
-├── Stage_2_POS_and_NER_Tagging.ipynb
-├── Stage_3_Singlish_Normalisation.ipynb
-├── Stage_4_Singlish_to_English_Conversion.ipynb
-├── Stage_5_Common_Normalisation.ipynb
-├── Stage_6_Vector_Space_Model_and_Inverted_Index.ipynb
-├── Stage_7_Sentiment_Analysis.ipynb
-├── Stage_8_Clustering_and_Visualization.ipynb
-├── Stage_9_Document_Search.ipynb
-└── Step_Appendix_1_Sentiment Labelling.ipynb    # Evaluation of 6 models for Sentiment Labelling
+├── backend/                     # Modular Flask API + prebuilt models & datasets
+│   ├── app.py                   # Flask app factory and REST endpoints
+│   ├── config.py                # Paths, topic/emotion labels, and color palettes
+│   ├── services/
+│   │   ├── analytics.py         # Topic, temporal, engagement, and timeline analytics
+│   │   ├── emotion.py           # Emotion distribution, trends, and confidence stats
+│   │   └── search.py            # BM25, title-boosted BM25 Hybrid, and TF-IDF search
+│   ├── data/                    # Dashboard-ready CSV datasets
+│   ├── models/                  # Saved BM25 and TF-IDF artifacts (.joblib)
+│   ├── pyproject.toml           # Python project metadata (uv)
+│   └── requirements.txt         # Python dependencies (pip)
+├── frontend/                    # React + Vite + Chakra UI interactive dashboard
+│   ├── index.html
+│   ├── package.json
+│   └── src/                     # Overview, Timeline, Sentiment, Search, Recommendations
+├── notebooks/                   # Stage 0–9 + Appendix Jupyter notebooks (see notebooks/README.md)
+├── data_scrape/                 # Historical (Arctic Shift) and incremental (PRAW) scrapers
+├── sentiment_plots/             # Standalone emotion visualization scripts and figures
+├── utilities/                   # Text preprocessing helpers, Singlish & slang dictionaries
+├── emotion_inference.py         # Stage 7 emotion inference script
+└── Makefile                     # Unified dev, build, and lint commands
 ```
 
-## Setup
-Note: Data scraped are too big so we did not include the files. Following scraping steps to reproduce. 
+## Quick Start (Dashboard)
 
-### Special Instructions
-1. For incremental scraping via PRAW, create a `.env` file in the root directory:
-   ```env
-   REDDIT_CLIENT_ID=your_client_id
-   REDDIT_CLIENT_SECRET=your_client_secret
-   REDDIT_USER_AGENT=your_user_agent
-   ```
+### 1. Install Dependencies
 
-## Pipeline
-
-Run each notebook in order. Outputs from earlier stages are consumed by later stages.
-
-### Stage 0 — Data Scraping
-
-**Historical scraping** (Arctic Shift API):
 ```bash
-python data_scrape/scrape.py --subreddit singapore --year 2025
+make install
 ```
-- `--year`: Year to scrape (default: `2025`)
-- `--download-media`: Also download media files
 
-**Incremental scraping** (PRAW, designed for cron jobs):
+Or install each side manually:
+
 ```bash
-python data_scrape/scrape_incremental.py --subreddit singapore --limit 1000
+# Backend (using uv or pip)
+cd backend && uv sync
+# or: python3 -m pip install -r backend/requirements.txt
+
+# Frontend
+cd frontend && npm install
 ```
-- `--limit`: Max posts to fetch (max 1000)
-- `--output-dir`: Output directory for CSV files (default: `.`)
 
----
+### 2. Run Backend & Frontend Together
 
-### Stage 1 — Data Collection and Cleaning
+```bash
+make dev
+```
 
-Cleans the raw Reddit dataset by removing noise (URLs, mentions, bots, duplicates, deleted posts) and normalizing text (punctuation, contractions, emojis).
+- **Backend API**: `http://127.0.0.1:5000` (health check: `GET /api/health`)
+- **Frontend UI**: `http://localhost:5173` (Vite proxies `/api` to port `5000`)
 
-**Output:** `PostVault.csv`, `CommentVault.csv`
+You can also start them in separate terminals with `make backend` and `make frontend`, or run `make build` / `make lint` for production builds and ESLint checks.
 
----
+## API Overview
 
-### Stage 2 — POS and NER Tagging
+| Endpoint | Description |
+|---|---|
+| `GET /api/health` | Service status, loaded post count, and topic count |
+| `GET /api/all` | Full dashboard payload (topics, timeline, emotion, engagement) |
+| `GET /api/topics` / `/api/topics/<id>` | Topic cluster summaries, top keywords, and representative posts |
+| `GET /api/timeline` | Monthly topic volume and dominant topic breakdowns |
+| `GET /api/emotion` | Emotion distributions, temporal trends, confidence, and sample posts |
+| `GET /api/search?q=<query>&method=<bm25\|bm25_hybrid\|tfidf>&k=20` | Real-time document retrieval with BM25, title-boosted BM25 Hybrid, or TF-IDF |
 
-Applies Part-of-Speech and Named Entity Recognition tagging to the cleaned text for downstream linguistic analysis.
+## Data & NLP Pipeline
 
----
+Large raw intermediate files are excluded from Git. To reproduce the pipeline from scratch:
 
-### Stage 3 — Singlish Normalisation
+### Data Scraping
 
-Standardizes Singlish expressions to reduce lexical variation (e.g., consistent spelling and form).
+**Historical scraping (Arctic Shift API):**
+```bash
+python3 data_scrape/scrape.py --subreddit singapore --year 2025
+```
 
----
+**Incremental scraping (PRAW):** create a `.env` file in the project root with `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, and `REDDIT_USER_AGENT`, then run:
+```bash
+python3 data_scrape/scrape_incremental.py --subreddit singapore --limit 1000
+```
 
-### Stage 4 — Singlish to English Conversion
+### Multi-Stage Processing
 
-Converts Singlish terms to standard English using a custom dictionary. Tracks the number of converted terms per post/comment in a `singlish_count` column.
+See [`notebooks/README.md`](notebooks/README.md) for the full stage-by-stage notebook index:
 
----
-
-### Stage 5 — Text Normalisation
-
-Applies slang expansion, spelling correction, stop word removal, and lemmatization. Produces the final clean text columns used for all downstream modelling.
-
----
-
-### Stage 6 — Vector Space Model and Inverted Index
-
-Builds TF-IDF, BM25, and Sentence-BERT representations for posts and comments, and constructs an inverted index for fast retrieval.
-
-**Outputs:** `.npz` matrices, `.joblib` models, `.npy` BERT embeddings, `.json` inverted indices — all saved under `data/`.
-
----
-
-### Stage 7 — Sentiment Analysis
-
-Performs sentiment and emotion analysis on posts and comments.
-
----
-
-### Stage 8 — Clustering and Visualization
-
-Reduces feature dimensionality with SVD, selects the optimal cluster count via Silhouette Score, and runs K-means clustering. Visualizes clusters with t-SNE and word clouds.
-
-**Output:** `tfidf_cluster`, `bm25_cluster`, `bert_cluster` columns added to `PostVault.csv` and `CommentVault.csv`.
-
----
-
-### Stage 9 — Document Search and Recommendation
-
-Implements a search engine and recommendation system using TF-IDF, BM25, and BERT embeddings, with heuristic ranking rules (title weighting, recency, upvotes, comment count).
+1. **Cleaning & Linguistic Tagging** (`Stage 1–2`): Bot/duplicate/URL removal, POS & NER tagging.
+2. **Singlish & Text Normalization** (`Stage 3–5`): Singlish standardization, dictionary-based Singlish-to-English conversion (`singlish_count`), slang expansion, stopword removal, and lemmatization.
+3. **Indexing & Emotion Inference** (`Stage 6`, `emotion_inference.py`, `Appendix 1`): TF-IDF, BM25, Sentence-BERT representations, inverted index, and transformer-based emotion classification.
+4. **Clustering & Document Search** (`Stage 8–9`): SVD + Silhouette-guided K-means clustering, t-SNE visualization, and document search with heuristic ranking rules.

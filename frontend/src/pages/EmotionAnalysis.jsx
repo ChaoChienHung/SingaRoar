@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Box, Heading, Text, VStack, HStack, SimpleGrid, Card, CardBody,
   CardHeader, Stat, StatLabel, StatValueText, Spinner, Badge,
@@ -184,7 +184,7 @@ function ViolinPlot({ data, width, height, yMin = 0, yMax = 1 }) {
 }
 
 // ── Box Plot SVG component ─────────────────────────────────────────────────────────
-function BoxPlotSVG({ data, width, height, valKey, p05Key, p25Key, p75Key, p95Key, medKey, label }) {
+function BoxPlotSVG({ data, width, height, p05Key, p25Key, p75Key, p95Key, medKey }) {
   if (!data?.length) return null;
   const padL = 60, padR = 20, padT = 20, padB = 40;
   const iW = width - padL - padR;
@@ -307,9 +307,6 @@ export default function EmotionAnalysis() {
     { key: 'explore', label: 'Explore Posts', icon: FiBarChart2 },
   ];
 
-  if (loading) return <Box textAlign="center" py={20}><Spinner size="xl" /><Text mt={4}>Loading...</Text></Box>;
-  if (error) return <Box textAlign="center" py={20}><Text color="red.500">Error: {error}</Text></Box>;
-
   const d = emotionData || {};
   const stats = d.stats || {};
   const dist = d.distribution || [];
@@ -321,34 +318,23 @@ export default function EmotionAnalysis() {
   const engagement = d.engagement || [];
   const confidence = d.confidence || [];
   const avgProbs = d.avgProbs || [];
-  const probCorr = d.probCorrelation || {};
   const samplePosts = d.samplePosts || {};
-  const hourDowHeatmap = d.hourDowHeatmap || [];
-
-  // Build Hour×DOW matrix: {day: {hour: dominantEmotion}}
-  const DOW_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const hourDowMatrix = useMemo(() => {
-    const m = {};
-    hourDowHeatmap.forEach(({ day, hour, dominant }) => {
-      if (!m[day]) m[day] = {};
-      m[day][hour] = dominant;
-    });
-    return m;
-  }, [hourDowHeatmap]);
 
   // Explore posts: flatten samplePosts and allow filtering/sorting
   const allExplorePosts = useMemo(() => {
     const out = [];
-    Object.entries(samplePosts).forEach(([emotion, posts]) => {
+    Object.entries(emotionData?.samplePosts || {}).forEach(([emotion, posts]) => {
       (posts || []).forEach((p) => out.push({ ...p, emotion }));
     });
     return out;
-  }, [samplePosts]);
+  }, [emotionData]);
 
-  // Box-plot data: add IQR error arrays for ErrorBar
-  const confBoxData = useMemo(() => confidence, [confidence]);
+  // Box-plot data
+  const confBoxData = confidence;
+  const engBoxData = engagement;
 
-  const engBoxData = useMemo(() => engagement, [engagement]);
+  if (loading) return <Box textAlign="center" py={20}><Spinner size="xl" /><Text mt={4}>Loading...</Text></Box>;
+  if (error) return <Box textAlign="center" py={20}><Text color="red.500">Error: {error}</Text></Box>;
 
   return (
     <Box>

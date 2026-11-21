@@ -10,6 +10,7 @@ const API_BASE = '/api';
 
 const METHOD_OPTIONS = [
   { value: 'bm25', label: 'BM25', description: 'Probabilistic term matching' },
+  { value: 'bm25_hybrid', label: 'BM25 Hybrid', description: 'Title-boosted BM25 (body + title)' },
   { value: 'tfidf', label: 'TF-IDF', description: 'Cosine similarity' },
 ];
 

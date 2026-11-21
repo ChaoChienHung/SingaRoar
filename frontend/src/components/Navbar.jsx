@@ -29,7 +29,7 @@ export default function Navbar() {
         <Link to="/">
           <HStack gap={2}>
             <Text fontSize="lg" fontWeight="bold" bgGradient="to-r" gradientFrom="blue.600" gradientTo="green.500" bgClip="text">
-              🇸🇬 SG Sentiment
+              🦁 SingaRoar
             </Text>
           </HStack>
         </Link>
