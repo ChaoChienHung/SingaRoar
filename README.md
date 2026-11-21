@@ -1,15 +1,15 @@
-# CS5246 Text Mining Final Project
+# SingaRoar
 
 ## Introduction
 
-This project analyzes posts and comments from the Singapore subreddit to surface public opinions, trending topics, and sentiment patterns. Raw social media text is processed through a structured multi-stage pipeline — from scraping to search and recommendation.
+**SingaRoar** analyzes posts and comments from the Singapore subreddit (`r/singapore`) to surface public opinions, trending topics, and sentiment patterns. The name combines *Singa* (Malay for "lion," echoing Singapore, the Lion City) with *Roar*—capturing the collective voice, sentiment, and buzz of the local online community. Raw social media text is processed through a structured multi-stage pipeline, from scraping and Singlish normalization to sentiment analysis, clustering, and document search.
 
 Note: Many files used during processing are not included in the repository as they are very large. Please forgive any file structure that is wrong in the jupyter notebooks. 
 
 ## Project Structure
 
 ```
-CS5246Project/
+SingaRoar/
 ├── dashboard-ui/          # Code for the dashboard UI
 ├── data-scrape/          # Code for scraping Reddit Data
 ├── sentiment_plots/          # Sentiment Distribution Scripts
